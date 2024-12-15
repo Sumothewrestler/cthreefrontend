@@ -1,5 +1,3 @@
-// app/businesses/add/page.tsx
-
 'use client';
 
 import { useState } from 'react';
@@ -28,10 +26,11 @@ export default function AddBusinessPage() {
         toast.success('Business created successfully');
         router.push('/businesses');
       } else {
-        const error = await response.json();
-        toast.error(error.message || 'Failed to create business');
+        const errorData = await response.json();
+        toast.error(errorData.message || 'Failed to create business');
       }
     } catch (error) {
+      console.error('Error creating business:', error);
       toast.error('Error occurred while creating business');
     } finally {
       setIsSubmitting(false);
@@ -76,3 +75,4 @@ export default function AddBusinessPage() {
     </div>
   );
 }
+

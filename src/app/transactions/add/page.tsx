@@ -1,5 +1,3 @@
-// app/transactions/add/page.tsx
-
 'use client';
 
 import { useState } from 'react';
@@ -7,9 +5,24 @@ import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { toast } from 'react-hot-toast';
 
+interface Business {
+  id: number;
+  name: string;
+}
+
+interface TransactionFormData {
+  date: string;
+  business: string;
+  transaction_type: 'Cr' | 'Dr';
+  amount: string;
+  description: string;
+}
+
+const fetcher = (url: string) => fetch(url).then(r => r.json());
+
 export default function AddTransactionPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<TransactionFormData>({
     date: '',
     business: '',
     transaction_type: 'Cr',
@@ -18,9 +31,7 @@ export default function AddTransactionPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch businesses for dropdown
-  const fetcher = (url: string) => fetch(url).then(r => r.json());
-  const { data: businesses } = useSWR('http://localhost:8000/api/businesses/', fetcher);
+  const { data: businessesData } = useSWR<{ results: Business[] }>('http://localhost:8000/api/businesses/', fetcher);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,10 +50,11 @@ export default function AddTransactionPage() {
         toast.success('Transaction created successfully');
         router.push('/transactions');
       } else {
-        const error = await response.json();
-        toast.error(error.message || 'Failed to create transaction');
+        const errorData = await response.json();
+        toast.error(errorData.message || 'Failed to create transaction');
       }
     } catch (error) {
+      console.error('Error creating transaction:', error);
       toast.error('Error occurred while creating transaction');
     } finally {
       setIsSubmitting(false);
@@ -61,8 +73,9 @@ export default function AddTransactionPage() {
       <form onSubmit={handleSubmit} className="max-w-md">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Date</label>
+            <label htmlFor="date" className="block text-sm font-medium mb-2">Date</label>
             <input
+              id="date"
               type="date"
               name="date"
               value={formData.date}
@@ -73,8 +86,9 @@ export default function AddTransactionPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Business</label>
+            <label htmlFor="business" className="block text-sm font-medium mb-2">Business</label>
             <select
+              id="business"
               name="business"
               value={formData.business}
               onChange={handleChange}
@@ -82,7 +96,7 @@ export default function AddTransactionPage() {
               required
             >
               <option value="">Select Business</option>
-              {businesses?.results.map((business: any) => (
+              {businessesData?.results.map((business) => (
                 <option key={business.id} value={business.id}>
                   {business.name}
                 </option>
@@ -91,8 +105,9 @@ export default function AddTransactionPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Type</label>
+            <label htmlFor="transaction_type" className="block text-sm font-medium mb-2">Type</label>
             <select
+              id="transaction_type"
               name="transaction_type"
               value={formData.transaction_type}
               onChange={handleChange}
@@ -105,8 +120,9 @@ export default function AddTransactionPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Amount</label>
+            <label htmlFor="amount" className="block text-sm font-medium mb-2">Amount</label>
             <input
+              id="amount"
               type="number"
               name="amount"
               value={formData.amount}
@@ -119,8 +135,9 @@ export default function AddTransactionPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Description</label>
+            <label htmlFor="description" className="block text-sm font-medium mb-2">Description</label>
             <textarea
+              id="description"
               name="description"
               value={formData.description}
               onChange={handleChange}
